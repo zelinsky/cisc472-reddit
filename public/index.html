@@ -11,7 +11,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-<html>
+<html lang="en-US">
 <head>
   <meta charset=utf-8 />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -22,8 +22,14 @@ limitations under the License.
   <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
   <script defer src="https://code.getmdl.io/1.1.3/material.min.js"></script>
 
-  <link rel="stylesheet" href="main.css">
-
+  <!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+<!-- jQuery library -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<!-- Popper JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+<!-- Latest compiled JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
   <!-- Import and configure the Firebase SDK -->
   <!-- These scripts are made available when the app is served or deployed on Firebase Hosting -->
   <!-- If you do not serve/host your project using Firebase Hosting see https://firebase.google.com/docs/web/setup -->
@@ -38,136 +44,16 @@ limitations under the License.
   <!-- initialize the SDK after all desired features are loaded -->
   <script defer src="/__/firebase/init.js"></script>
 
-  <script type="text/javascript">
-    /**
-     * Function called when clicking the Login/Logout button.
-     */
-    // [START buttoncallback]
-    function toggleSignIn() {
-      if (!firebase.auth().currentUser) {
-        // [START createprovider]
-        var provider = new firebase.auth.GoogleAuthProvider();
-        // [END createprovider]
-        // [START addscopes]
-        provider.addScope('https://www.googleapis.com/auth/plus.login');
-        // [END addscopes]
-        // [START signin]
-        firebase.auth().signInWithRedirect(provider);
-        // [END signin]
-      } else {
-        // [START signout]
-        firebase.auth().signOut();
-        // [END signout]
-      }
-      // [START_EXCLUDE]
-      document.getElementById('quickstart-sign-in').disabled = true;
-      // [END_EXCLUDE]
-    }
+  <!-- FirebaseUI-->
+  <!--<script src="https://cdn.firebase.com/libs/firebaseui/3.5.2/firebaseui.js"></script>
+  <link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/3.5.2/firebaseui.css" /> -->
 
-    function toggleSignInGithub() {
- if (!firebase.auth().currentUser) {
-        // [START createprovider]
-        var provider = new firebase.auth.GithubAuthProvider();
-        // [END createprovider]
-        // [START addscopes]
-        // [END addscopes]
-        // [START signin]
-        firebase.auth().signInWithRedirect(provider);
-        // [END signin]
-      } else {
-        // [START signout]
-        firebase.auth().signOut();
-        // [END signout]
-      }
-      // [START_EXCLUDE]
-      document.getElementById('quickstart-sign-in-github').disabled = true;
-      // [END_EXCLUDE]
-    }
-    // [END buttoncallback]
-    /**
-     * initApp handles setting up UI event listeners and registering Firebase auth listeners:
-     *  - firebase.auth().onAuthStateChanged: This listener is called when the user is signed in or
-     *    out, and that is where we update the UI.
-     *  - firebase.auth().getRedirectResult(): This promise completes when the user gets back from
-     *    the auth redirect flow. It is where you can get the OAuth access token from the IDP.
-     */
-    function initApp() {
-      // Result from Redirect auth flow.
-      // [START getidptoken]
-      firebase.auth().getRedirectResult().then(function(result) {
-        if (result.credential) {
-          // This gives you a Google Access Token. You can use it to access the Google API.
-          var token = result.credential.accessToken;
-          // [START_EXCLUDE]
-          document.getElementById('quickstart-oauthtoken').textContent = token;
-        } else {
-          document.getElementById('quickstart-oauthtoken').textContent = 'null';
-          // [END_EXCLUDE]
-        }
-        // The signed-in user info.
-        var user = result.user;
-      }).catch(function(error) {
-        // Handle Errors here.
-        var errorCode = error.code;
-        var errorMessage = error.message;
-        // The email of the user's account used.
-        var email = error.email;
-        // The firebase.auth.AuthCredential type that was used.
-        var credential = error.credential;
-        // [START_EXCLUDE]
-        if (errorCode === 'auth/account-exists-with-different-credential') {
-          //alert('You have already signed up with a different auth provider for that email.');
-          // If you are using multiple auth providers on your app you should handle linking
-    // the user's accounts here.
-    var provider = new firebase.auth.GithubAuthProvider();
-   firebase.auth().currentUser.linkWithRedirect(provider);
-        } else {
-          console.error(error);
-        }
-        // [END_EXCLUDE]
-      });
-      // [END getidptoken]
-      // Listening for auth state changes.
-      // [START authstatelistener]
-      firebase.auth().onAuthStateChanged(function(user) {
-        if (user) {
-          // User is signed in.
-          var displayName = user.displayName;
-          var email = user.email;
-          var emailVerified = user.emailVerified;
-          var photoURL = user.photoURL;
-          var isAnonymous = user.isAnonymous;
-          var uid = user.uid;
-          var providerData = user.providerData;
-          // [START_EXCLUDE]
-          document.getElementById('quickstart-sign-in-status').textContent = 'Signed in';
-          document.getElementById('quickstart-sign-in').textContent = 'Sign out';
-          document.getElementById('quickstart-account-details').textContent = JSON.stringify(user, null, '  ');
-          // [END_EXCLUDE]
-        } else {
-          // User is signed out.
-          // [START_EXCLUDE]
-          document.getElementById('quickstart-sign-in-status').textContent = 'Signed out';
-          document.getElementById('quickstart-sign-in').textContent = 'Sign in with Google';
-          document.getElementById('quickstart-account-details').textContent = 'null';
-          document.getElementById('quickstart-oauthtoken').textContent = 'null';
-          // [END_EXCLUDE]
-        }
-        // [START_EXCLUDE]
-    document.getElementById('quickstart-sign-in').disabled = false;
-    document.getElementById('quickstart-sign-in-github').disabled = false;
-        // [END_EXCLUDE]
-      });
-      // [END authstatelistener]
-    document.getElementById('quickstart-sign-in').addEventListener('click', toggleSignIn, false);
-    document.getElementById('quickstart-sign-in-github').addEventListener('click', toggleSignInGithub, false);
-    }
-    window.onload = function() {
-      initApp();
-    };
-  </script>
+  <!-- Load local sheets and scripts-->
+  <link rel="stylesheet" type="text/css" href="styles/main.css">
+  <script type="text/javascript" src="scripts/index.js"></script>
 </head>
 <body>
+
 <div class="demo-layout mdl-layout mdl-js-layout mdl-layout--fixed-header">
 
   <!-- Header section containing title -->
@@ -191,16 +77,16 @@ limitations under the License.
           <p>Sign in with your Google account below.</p>
 
           <!-- Button that handles sign-in/sign-out -->
-          <button disabled class="mdl-button mdl-js-button mdl-button--raised" id="quickstart-sign-in">Sign in with Google</button>
-	  <button disabled class="mdl-button mdl-js-button mdl-button--raised" id="quickstart-sign-in-github">Sign in with GitHub</button>
+          <button disabled class="mdl-button mdl-js-button mdl-button--raised" id="sign-in-google">Sign in with Google</button>
+	  <button disabled class="mdl-button mdl-js-button mdl-button--raised" id="sign-in-github">Sign in with GitHub</button>
 
           <!-- Container where we'll display the user details -->
-          <div class="quickstart-user-details-container">
-            Firebase sign-in status: <span id="quickstart-sign-in-status">Unknown</span>
+          <div class="user-details-container">
+            Firebase sign-in status: <span id="sign-in-status">Unknown</span>
             <div>Firebase auth <code>currentUser</code> object value:</div>
-            <pre><code id="quickstart-account-details">null</code></pre>
+            <pre><code id="account-details">null</code></pre>
             <div>Google OAuth Access Token:</div>
-            <pre><code id="quickstart-oauthtoken">null</code></pre>
+            <pre><code id="oauthtoken">null</code></pre>
           </div>
         </div>
       </div>
