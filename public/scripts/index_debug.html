@@ -20,7 +20,6 @@ function toggleSignInGoogle() {
     }
     // [START_EXCLUDE]
     $('#sign-in-google').prop('disabled', true);
-    $('#sign-in-github').prop('disabled', true);
     // [END_EXCLUDE]
 }
 
@@ -42,7 +41,6 @@ function toggleSignInGithub() {
         // [END signout]
     }
     // [START_EXCLUDE]
-    $('#sign-in-google').prop('disabled', true);
     $('#sign-in-github').prop('disabled', true);
     // [END_EXCLUDE]
 }
@@ -127,7 +125,6 @@ function initAuth() {
             var uid = user.uid;
             var providerData = user.providerData;
             // [START_EXCLUDE]
-            $('#navbar-user').text(`Logged in as: ${displayName}`).show();
             $('#sign-in-status').text('Signed in');
             $('#sign-in-google').text('Sign out');
             if (user.providerData.length === 1 && user.providerData[0].providerId === "google.com") {
@@ -140,7 +137,6 @@ function initAuth() {
         } else {
             // User is signed out.
             // [START_EXCLUDE]
-            $('#navbar-user').empty().hide();
             $('#sign-in-status').text('Signed out');
             $('#sign-in-google').text('Sign in with Google');
             $('#sign-in-github').text('Sign in with GitHub');

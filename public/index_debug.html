@@ -54,26 +54,16 @@ limitations under the License.
 </head>
 <body>
 
-
-  <nav id="header" class="navbar fixed-top navbar-expand-sm navbar-dark">
-    <a class="navbar-brand" href="#">Reddit</a>
-
-    <ul id="navbar-right" class="navbar-nav ml-auto">
-      <li class="nav-item">
-      <a id="navbar-user" class="nav-link" href="#"></a>
-      </li>
-      <li class="nav-item">
-          <button disabled type="button" id="sign-in-google" class="btn btn-light">Sign in with Google</button>
-
-          <button disabled type="button" id="sign-in-github" class="btn btn-light">Sign in with GitHub</button>
-      </li>
-    </ul>
-  </nav>
-
-  <br><br>
 <div class="demo-layout mdl-layout mdl-js-layout mdl-layout--fixed-header">
 
   <!-- Header section containing title -->
+  <header class="mdl-layout__header mdl-color-text--white mdl-color--light-blue-700">
+    <div class="mdl-cell mdl-cell--12-col mdl-cell--12-col-tablet mdl-grid">
+      <div class="mdl-layout__header-row mdl-cell mdl-cell--12-col mdl-cell--12-col-tablet mdl-cell--8-col-desktop">
+        <a href="/"><h3>Firebase Authentication</h3></a>
+      </div>
+    </div>
+  </header>
 
   <main class="mdl-layout__content mdl-color--grey-100">
     <div class="mdl-cell mdl-cell--12-col mdl-cell--12-col-tablet mdl-grid">
@@ -87,8 +77,8 @@ limitations under the License.
           <p>Sign in with your Google account below.</p>
 
           <!-- Button that handles sign-in/sign-out -->
-          <!-- <button disabled class="mdl-button mdl-js-button mdl-button--raised" id="sign-in-google">Sign in with Google</button>
-	  <button disabled class="mdl-button mdl-js-button mdl-button--raised" id="sign-in-github">Sign in with GitHub</button>-->
+          <button disabled class="mdl-button mdl-js-button mdl-button--raised" id="sign-in-google">Sign in with Google</button>
+	  <button disabled class="mdl-button mdl-js-button mdl-button--raised" id="sign-in-github">Sign in with GitHub</button>
 
           <!-- Container where we'll display the user details -->
           <div class="user-details-container">
