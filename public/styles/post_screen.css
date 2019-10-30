@@ -1,0 +1,16 @@
+#signIn {
+  float : right;
+}
+#header {
+  margin : auto;
+  text-align : center;
+}
+#content {
+  background : yellow;
+  display : inline;
+  float : left;
+}
+#subReddits {
+  background : orange;
+  display : inline;
+}
