@@ -81,9 +81,9 @@ function initAuth() {
             // This gives you a Google Access Token. You can use it to access the Google API.
             var token = result.credential.accessToken;
             // [START_EXCLUDE]
-            document.getElementById('oauthtoken').textContent = token;
+            //document.getElementById('oauthtoken').textContent = token;
         } else {
-            document.getElementById('oauthtoken').textContent = 'null';
+            //document.getElementById('oauthtoken').textContent = 'null';
             // [END_EXCLUDE]
         }
         // The signed-in user info.
@@ -128,25 +128,25 @@ function initAuth() {
             var providerData = user.providerData;
             // [START_EXCLUDE]
             $('#navbar-user').text(`Logged in as: ${displayName}`).show();
-            $('#sign-in-status').text('Signed in');
+            //$('#sign-in-status').text('Signed in');
             $('#sign-in-google').text('Sign out');
             if (user.providerData.length === 1 && user.providerData[0].providerId === "google.com") {
                 $("#sign-in-github").text("Link GitHub account");
             } else {
                 $('#sign-in-github').hide();
             }
-            $('#account-details').text(JSON.stringify(user, null, '  '));
+            //$('#account-details').text(JSON.stringify(user, null, '  '));
             // [END_EXCLUDE]
         } else {
             // User is signed out.
             // [START_EXCLUDE]
             $('#navbar-user').empty().hide();
-            $('#sign-in-status').text('Signed out');
+            //$('#sign-in-status').text('Signed out');
             $('#sign-in-google').text('Sign in with Google');
             $('#sign-in-github').text('Sign in with GitHub');
             $('#sign-in-github').show();
-            $('#account-details').text('null');
-            $('#oauthtoken').text('null');
+            //$('#account-details').text('null');
+            //$('#oauthtoken').text('null');
             // [END_EXCLUDE]
         }
         // [START_EXCLUDE]
