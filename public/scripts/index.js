@@ -1,3 +1,11 @@
+function createUser(user) {
+    firebase.firestore().collection("users").doc(user.uid).set({
+        name: user.displayName,
+        email: user.email,
+        photo: user.photoURL
+    });
+}
+
 /**
     * Function called when clicking the Login/Logout button.
     */
@@ -88,12 +96,15 @@ function initAuth() {
         }
         // The signed-in user info.
         var user = result.user;
-        /*if (result.additionalUserInfo && result.additionalUserInfo.isNewUser) {
-            var username = prompt("Please enter your username:", "Username");
+
+        // If new user, add them to the database
+        if (result.additionalUserInfo && result.additionalUserInfo.isNewUser) {
+            /*var username = prompt("Please enter your username:", "Username");
             user.updateProfile({
                 username: username
-            })
-        }*/
+            })*/
+            createUser(user);
+        }
     }).catch(function (error) {
         // Handle Errors here.
         var errorCode = error.code;
@@ -125,6 +136,9 @@ function initAuth() {
             var photoURL = user.photoURL;
             var isAnonymous = user.isAnonymous;
             var uid = user.uid;
+            //console.log(uid);
+            //firebase.auth().currentUser.getIdToken(true).then((idToken) => console.log(idToken));
+            firebase.firestore().collection("users").doc(uid).get().then((doc) => console.log(doc.data()));
             var providerData = user.providerData;
             // [START_EXCLUDE]
             $('#navbar-user').text(`Logged in as: ${displayName}`).show();
