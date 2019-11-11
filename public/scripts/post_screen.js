@@ -1,3 +1,6 @@
+// import below doesnt work!
+//import { Firestore } from "@google-cloud/firestore";
+
 /*
 TO DO
 - request data from db
@@ -11,8 +14,26 @@ TO DO
 */
 
 // voting listeners
-document.getElementById("upvote").addEventListener("click", myScript);
-document.getElementById("downvote").addEventListener("click", myScript);
+//document.getElementById("upvote").addEventListener("click", myScript);
+//document.getElementById("downvote").addEventListener("click", myScript);
+
+$( document ).ready(function() {
+  
+  //var post_instance = firebase.firestore().collection("subreddits").collection("websec").collection("posts").doc("post_exp");
+  var test = firebase.firestore().collection("subreddits").doc("websec").collection("posts").doc("post_example").get();
+  console.log(test);
+  /*
+  if(post_instance.get()){
+    console.log(post_instance.data());
+  }
+  */
+
+  //TEST FUNCTIONS HERE
+  //fillPostPage("test post","can you see the content?","text","nathan a","DNE subreddit");
+  //fillPostPage("test post",Firestore.subreddit.toString(),"text","nathan a","DNE subreddit");
+  //fillPostPage(post_instance.title)
+});
+
 
 function vote(direction){
   // check if user has 1.Is logged in and 2.Has not voted already
@@ -40,6 +61,3 @@ function fillPostPage(title,content,type,user_owner,subreddit){
       break;
   }
 }
-
-//TEST FUNCTIONS HERE
-//fillPostPage("test post","can you see the content?","text","nathan a","DNE subreddit");

@@ -1,23 +1,57 @@
 <html>
-  <body>
-    <!-- headder for navigation and sign in -->
-    <div id="navigationBanner">
-      <h1 id="header">Welcome to Read-It</h1>
-      <button type="button" id="home">Home</button>
-      <input type="text" placeholder="Search"></input>
-      <button type="button" id="signIn">Sign In</button>
-    </div>
+<head>
+  <meta charset=utf-8 />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Google Sign In Example</title>
 
-    <!-- post title and content meta data -->
-    <div id="contnet_div">
-      <h2>Content: </h2>
-      <p id="content"></p>
-      <h2>User: </h2>
-      <p id="user_owner"></p>
-    </div>
+  <!-- Latest compiled and minified CSS -->
+  <!--link rel="stylesheet" href=""-->
+  <!-- jQuery library -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+  <!-- Popper JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+  <!-- Latest compiled JavaScript -->
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+  <!-- Import and configure the Firebase SDK -->
+  <!-- These scripts are made available when the app is served or deployed on Firebase Hosting -->
+  <!-- If you do not serve/host your project using Firebase Hosting see https://firebase.google.com/docs/web/setup -->
 
-    <!-- upvote and down vote buttons-->
-    <button id="upvote">Updoot</button>
-    <button id="downvote">Downdoot</button>
-  </body>
+  <!-- update the version number as needed -->
+  <script defer src="/__/firebase/7.2.1/firebase-app.js"></script>
+  <!-- include only the Firebase features as you need -->
+  <script defer src="/__/firebase/7.2.1/firebase-auth.js"></script>
+  <script defer src="/__/firebase/7.2.2/firebase-firestore.js"></script>
+  <script defer src="/__/firebase/7.2.1/firebase-messaging.js"></script>
+  <script defer src="/__/firebase/7.2.1/firebase-storage.js"></script>
+  <!-- initialize the SDK after all desired features are loaded -->
+  <script defer src="/__/firebase/init.js"></script>
+
+  <!-- FirebaseUI-->
+  <!--<script src="https://cdn.firebase.com/libs/firebaseui/3.5.2/firebaseui.js"></script>
+  <link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/3.5.2/firebaseui.css" /> -->
+
+  <!-- Load local sheets and scripts-->
+  <script type="text/javascript" src="scripts/post_screen.js"></script>
+</head>
+<body>  
+  <!-- headder for navigation and sign in -->
+  <div id="navigationBanner">
+    <h1 id="header">Welcome to Read-It</h1>
+    <button type="button" id="home">Home</button>
+    <input type="text" placeholder="Search"></input>
+    <button type="button" id="signIn">Sign In</button>
+  </div>
+
+  <!-- post title and content meta data -->
+  <div id="content_div">
+    <h2>Content: </h2>
+    <p id="content"></p>
+    <h2>User: </h2>
+    <p id="user_owner"></p>
+  </div>
+
+  <!-- upvote and down vote buttons-->
+  <button id="upvote">Updoot</button>
+  <button id="downvote">Downdoot</button>
+</body>
 </html>
