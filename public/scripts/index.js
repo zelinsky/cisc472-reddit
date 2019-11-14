@@ -176,4 +176,33 @@ function initAuth() {
 
 $(document).ready(function () {
     initAuth();
+    const db = firebase.firestore();
+    const posts = db.collectionGroup('posts');
+    posts.get().then(function (querySnapshot) {
+        querySnapshot.forEach(function (doc) {
+            console.log(doc.id, ' => ', doc.data());
+            $('#main-posts').append(`
+            <div class="card border-primary mt-2">
+                <div class="card-header"><h4>${doc.data().title}</h5></div>
+                <div class="card-body">
+                    <p class="card-text">${doc.data().content}</p>
+                </div>
+            </div>
+            `);
+        });
+    });
+
+    const subreddits = db.collection('subreddits');
+    subreddits.get().then(function (querySnapshot) {
+        querySnapshot.forEach(function (doc) {
+            console.log(doc.id, ' => ', doc.data());
+            $('#main-subs').append(`
+            <div class="card border-warning mt-2">
+                <div class="card-body">
+                    <h5 class="card-title">${doc.data().name}</h5>
+                </div>
+            </div>
+            `);
+        });
+    });
 });
