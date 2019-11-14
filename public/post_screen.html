@@ -5,7 +5,7 @@
   <title>Google Sign In Example</title>
 
   <!-- Latest compiled and minified CSS -->
-  <!--link rel="stylesheet" href=""-->
+  <link rel="stylesheet" href="styles/post_screen.css">
   <!-- jQuery library -->
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
   <!-- Popper JS -->
@@ -32,6 +32,7 @@
 
   <!-- Load local sheets and scripts-->
   <script type="text/javascript" src="scripts/post_screen.js"></script>
+  <!--script type="text/stylesheet" src="styles/post_screen.css"></script-->
 </head>
 <body>  
   <!-- headder for navigation and sign in -->
@@ -44,14 +45,25 @@
 
   <!-- post title and content meta data -->
   <div id="content_div">
-    <h2>Content: </h2>
-    <p id="content"></p>
-    <h2>User: </h2>
-    <p id="user_owner"></p>
+    <h2 id="title"></h2>
+    <h2>User: <span id="user_owner"></span></h2>
+    <h2>Content: <span id="content"></span></h2>
+    
   </div>
 
+  <table>
+    <tr>
+      <th>votes: </th>
+      <th id="votes">0</th>
+    </tr>
+  </table>
+
   <!-- upvote and down vote buttons-->
-  <button id="upvote">Updoot</button>
-  <button id="downvote">Downdoot</button>
+  <button id="upvote_button">Updoot</button>
+  <button id="downvote_button">Downdoot</button>
+
+  <div id="comments">
+    <h2>Comments:</h2>
+  </div>
 </body>
 </html>
