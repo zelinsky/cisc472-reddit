@@ -174,15 +174,17 @@ function initAuth() {
 
 }
 
-$(document).ready(function () {
-    initAuth();
-    const db = firebase.firestore();
-    const posts = db.collectionGroup('posts');
+function upvotePost(db, id) {
+    console.log(id);
+}
+
+function displayPosts(posts) {
     posts.get().then(function (querySnapshot) {
+        $("#main-posts").empty();
         querySnapshot.forEach(function (doc) {
             console.log(doc.id, ' => ', doc.data());
             $('#main-posts').append(`
-            <div class="card border-primary mt-2">
+            <div id="${doc.id}" class="reddit-post card border-primary mt-2">
                 <div class="card-header"><h4>${doc.data().title}</h5></div>
                 <div class="card-body">
                     <p class="card-text">${doc.data().content}</p>
@@ -191,13 +193,51 @@ $(document).ready(function () {
             `);
         });
     });
+}
+
+function getPosts(db, id) {
+    if (id) {
+        var docRef = db.collection("subreddits").doc(id);
+        docRef.get().then(function (doc) {
+            if (doc.exists) {
+                var posts = docRef.collection("posts");
+                displayPosts(posts);
+            } else {
+                return;
+            }
+        }).catch(function (error) {
+            console.log("Error displaying subreddit: ", error)
+        });
+
+    } else {
+        var posts = db.collectionGroup('posts');
+        displayPosts(posts);
+    }
+}
+
+$(document).ready(function () {
+    initAuth();
+    const db = firebase.firestore();
+
+    $("#home-button").on("click", function(event) {
+        getPosts(db);
+    })
+    $("#main-posts").on("click", ".card", function (event) {
+        console.log(this.id);
+    });
+
+    $("#main-subs").on("click", ".card", function (event) {
+        getPosts(db, this.id);
+    });
+
+    getPosts(db);
 
     const subreddits = db.collection('subreddits');
     subreddits.get().then(function (querySnapshot) {
         querySnapshot.forEach(function (doc) {
             console.log(doc.id, ' => ', doc.data());
             $('#main-subs').append(`
-            <div class="card border-warning mt-2">
+            <div id="${doc.id}" class="reddit-sub card border-warning mt-2">
                 <div class="card-body">
                     <h5 class="card-title">${doc.data().name}</h5>
                 </div>
@@ -205,4 +245,5 @@ $(document).ready(function () {
             `);
         });
     });
+
 });
