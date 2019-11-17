@@ -6,6 +6,10 @@ TO DO
 
 -votes for comments (add field in post)
 
+-indicate current vote
+
+-take away vote if you hit up or down twice
+
 */
 
 $( document ).ready(function() {
@@ -30,18 +34,22 @@ $( document ).ready(function() {
   }).catch(function(error) {
       console.log("Error getting document:", error);
   });
-  
-  // fill up comments
-  /*
-  postInst.collection("comments").get().then(function (querySnapshot) {
-    querySnapshot.forEach(function (doc) {
-        addComment(getUsername(doc),doc.data().text);
-    });
-  });
-  */
 
-  //addComment("big boy", "it's me");
-  //addComment("triggerman21", "no way, it's him");
+  // color buttons based on user's previous vote
+  currentUser.collection("userPosts").doc(postKey).get().then(function(doc){
+    if(doc.exists){
+      var previousVote = doc.data().vote;
+      if(previousVote == 1){
+        $("#upvote_button").attr("class","btn btn-success");
+        $("#downvote_button").attr("class","btn btn-danger");
+      }
+      else if(previousVote == -1){
+        $("#upvote_button").attr("class","btn btn-danger");
+        $("#downvote_button").attr("class","btn btn-success");
+      }
+    }
+  })
+
 
   //* LISTENERS */
   // listen for votes from server
@@ -77,12 +85,14 @@ function vote(newVote, postInst, currentUser, postKey){
 
   // check if user has 1.Is logged in and 2.Has not voted already
   var voteUpdate = 0; // stores value we have to add to post votes,  changes based on new vote
-  var currentUser_post = currentUser.collection("userPosts").doc(postKey);// if user has intacted with this post before this gets that doc
+  var currentUserPost = currentUser.collection("userPosts").doc(postKey);// if user has intacted with this post before this gets that doc
 
   // checks if doc exists
-  currentUser_post.get().then(function(doc) {
+  currentUserPost.get().then(function(doc) {
       if (doc.exists) {
           var oldVote = doc.data().vote;
+          console.log("OLD VOTE: ", oldVote);
+          
           // user has interacted with this post before! They either made it or voted on it
           console.log("Previous user vote:",oldVote);
           
@@ -90,13 +100,13 @@ function vote(newVote, postInst, currentUser, postKey){
           if(newVote != oldVote) {
             voteUpdate = newVote - oldVote; // ensures the post is updated with the correct vote count
             //console.log("vote update: ", voteUpdate);
-            currentUser_post.update({vote : newVote}); // updates user vote 
+            currentUserPost.update({vote : newVote}); // updates user vote
           }
       } else {
-          // make new post instance and vote *******TEST PLS
+          // make new post instance and vote
           voteUpdate = newVote;
           
-          currentUser_post.set({
+          currentUserPost.set({
             make: false,
             vote: voteUpdate,
             post: postInst.path
@@ -112,6 +122,16 @@ function vote(newVote, postInst, currentUser, postKey){
   }).catch(function(error) {
       console.log("Error getting document:", error);
   });
+
+  // color buttons accordingly 
+  if(newVote == 1){
+    $("#upvote_button").attr("class","btn btn-success");
+    $("#downvote_button").attr("class","btn btn-danger");
+  }
+  else {
+    $("#upvote_button").attr("class","btn btn-danger");
+    $("#downvote_button").attr("class","btn btn-success");
+  }
 }
 
 function fillPostPage(postData){
@@ -162,10 +182,11 @@ function addComment(user, newComment){
   //$("#comments").text(newComment);
   //$("#comments").text($("#comments").text().concat("\n", user,": ",newComment,"\n"));
   
-  var userText = $("<dt style='font-weight:bold'></dt>").text(user);
-  var commentText = $("<dd></dd>").text(newComment);
+  var userTitle = $("<b></b>").text(user.concat(": "));
+  var commment = $("<p></p>").text(newComment);
+  var message = $("<li class='list-group-item'></li>").append($("<b></b>").text(user),$("<p></p>").text(newComment));
 
-  $("#comments").prepend(userText, commentText);
+  $("#comments").prepend(message);
 }
 
 function getUsername(ref){

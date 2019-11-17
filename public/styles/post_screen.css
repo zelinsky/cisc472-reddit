@@ -14,3 +14,12 @@
 table,td,th{
   border: 1px solid black;
 }
+
+#buttons{
+  margin-bottom : 25px;
+}
+
+#vTable{
+  font-size: 20px;
+  margin-bottom: 10px;
+}
