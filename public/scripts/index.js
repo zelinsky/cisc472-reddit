@@ -174,6 +174,217 @@ function initAuth() {
 
 }
 
+function upvotePost(db, id) {
+    console.log(id);
+}
+
+function displayPosts(posts) {
+    posts.get().then(function (querySnapshot) {
+        $("#main-posts").empty();
+        querySnapshot.forEach(function (doc) {
+            //console.log(doc.id, ' => ', doc.data());
+            $('#main-posts').append(`
+            <div id="${doc.id}" class="card border-primary mt-2">
+            <div class="row">
+            <div class="col-md-1">
+            <i class="upvote material-icons md-48">keyboard_arrow_up</i>
+            <i class="downvote material-icons md-48">keyboard_arrow_down</i>
+            <br>
+            <p class="votes text-center">${doc.data().votes}</p>
+            </div>
+            <div class="col-md-11 reddit-post">
+            <div class="card-header">
+                <h4>${doc.data().title}</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">${doc.data().content}</p>
+                </div>
+            </div>
+            </div>
+            </div>
+            `);
+        });
+    });
+}
+
+function getPosts(db, id) {
+    if (id) {
+        var docRef = db.collection("subreddits").doc(id);
+        docRef.get().then(function (doc) {
+            if (doc.exists) {
+                $("#new-post-container").addClass("hidden");
+                //$("#new-post-sub").children("option:selected").prop("selected", false);
+                $(`#new-post-sub option[value="${id}"]`).prop("selected", true);
+                $("#current-sub").text(doc.data().name);
+                var posts = docRef.collection("posts");
+                displayPosts(posts);
+            } else {
+                return;
+            }
+        }).catch(function (error) {
+            console.log("Error displaying subreddit: ", error)
+        });
+
+    } else {
+        var posts = db.collectionGroup('posts');
+        displayPosts(posts);
+    }
+}
+
+function getSubs(db) {
+    $("#main-subs").empty();
+    const subreddits = db.collection('subreddits');
+    subreddits.get().then(function (querySnapshot) {
+        querySnapshot.forEach(function (doc) {
+            //console.log(doc.id, ' => ', doc.data());
+            $('#new-post-sub').append(`
+            <option value="${doc.id}">${doc.data().name}</option>
+            `);
+            $('#main-subs').append(`
+            <div id="${doc.id}" class="reddit-sub card border-warning mt-2">
+                <div class="card-body">
+                    <h5 class="card-title">${doc.data().name}</h5>
+                </div>
+            </div>
+            `);
+        });
+    });
+}
+
 $(document).ready(function () {
     initAuth();
+    const db = firebase.firestore();
+    let curSub = "";
+
+    $("#home-button").on("click", function(event) {
+        $("#current-sub").text("");
+        curSub = "";
+        getPosts(db);
+    })
+    $("#main-posts").on("click", ".reddit-post", function (event) {
+        console.log($(this).closest('.card').attr('id'));
+    });
+
+    $("#main-subs").on("click", ".card", function (event) {
+        curSub = this.id;
+        getPosts(db, this.id);
+    });
+
+    getPosts(db);
+    
+    // Votes
+    $("#main-posts").on("click", ".upvote", function(event) {
+        var postId = $(this).closest('.card').attr('id');
+        /*const postRef = db.collectionGroup("posts").doc(postId);
+        postRef.get().then(function(post) {
+            console.log(post.data());
+        });*/
+    });
+
+    $("#main-posts").on("click", ".downvote", function(event) {
+        console.log("downvote ", $(this).closest('.card').attr('id'))
+    });
+
+    // New Subreddits
+    $("#make-sub").on("click", function() {
+        const c = $("#new-sub-container");
+        if (c.hasClass("hidden")) {
+            $("#new-post-container").addClass("hidden");
+            c.removeClass("hidden");
+        } else {
+            c.addClass("hidden");
+        }
+    });
+
+    $("#new-sub-close").on("click", function() {
+        $("#new-sub-container").addClass("hidden");
+    });
+
+    $("#new-sub-form").on("submit", function (e) {
+        e.preventDefault();
+        const user = firebase.auth().currentUser;
+        if (!user) {
+            alert("You must log in to create a subreddit.");
+            return;
+        }
+        $("#new-sub-container").addClass("hidden");
+        const data = $("#new-sub-form").serializeArray();
+        const name = data[0].value;
+        const lowerName = name.toLowerCase();
+        const subRef = db.collection("subreddits").doc(lowerName);
+        subRef.get().then(function(doc) {
+            if (doc.exists) {
+                alert("Subreddit already exists");
+                return;
+            } else {
+                db.collection("subreddits").doc(lowerName).set({
+                    name: name
+                }).then(function() {
+                    curSub = lowerName;
+                    getSubs(db);
+                    getPosts(db, curSub)
+                }).catch(function(error) {
+                    console.log("Error creating subreddit: ", error)
+                });
+            }
+        });
+        $("#new-sub-form").find("input[type=text]").val("");
+    });
+
+
+    // New Posts
+    $("#make-post").on("click", function() {
+        const c = $("#new-post-container");
+        if (c.hasClass("hidden")) {
+            $("#new-sub-container").addClass("hidden");
+            c.removeClass("hidden");
+        } else {
+            c.addClass("hidden");
+        }
+    });
+
+    $("#new-post-close").on("click", function() {
+        $("#new-post-container").addClass("hidden");
+    });
+
+    $("#new-post-form").on("submit", function (e) {
+        e.preventDefault();
+        const user = firebase.auth().currentUser;
+        if (!user) {
+            alert("You must log in to create a post.");
+            return;
+        }
+        $("#new-post-container").addClass("hidden");
+        const data = $("#new-post-form").serializeArray();
+        const title = data[0].value;
+        const content = data[1].value;
+        const subreddit = data[2].value;
+        const subRef = db.collection("subreddits").doc(subreddit);
+        subRef.get().then(function(doc) {
+            if (doc.exists) {
+                subRef.collection("posts").add({
+                    title: title,
+                    content: content,
+                    type: "text",
+                    votes: 1,
+                    user: db.doc(`/users/${user.uid}`)
+                }).then(function(postRef) {
+                    getPosts(db, curSub);
+                    db.collection("users").doc(user.uid).collection("userPosts").add({
+                        made: true,
+                        post: postRef,
+                        vote: 1
+                    });
+                });
+            } else {
+                alert("Subreddit does not exist.");
+            }
+        }).catch(function(error) {
+            console.log("Error getting document: ", error);
+        });
+        $("#new-post-form").find("input[type=text], textarea").val("");
+    });
+
+    getSubs(db);
+
 });
