@@ -13,4 +13,7 @@ body {
 #main-subs {
     padding: 5px;
 }
+ 
+.material-icons.orange { color: #FB8C00; }
+.material-icons.blue { color: #4393fa; }
 

@@ -184,11 +184,23 @@ function displayPosts(posts) {
         querySnapshot.forEach(function (doc) {
             //console.log(doc.id, ' => ', doc.data());
             $('#main-posts').append(`
-            <div id="${doc.id}" class="reddit-post card border-primary mt-2">
-                <div class="card-header"><h4>${doc.data().title}</h5></div>
+            <div id="${doc.id}" class="card border-primary mt-2">
+            <div class="row">
+            <div class="col-md-1">
+            <i class="upvote material-icons md-48">keyboard_arrow_up</i>
+            <i class="downvote material-icons md-48">keyboard_arrow_down</i>
+            <br>
+            <p class="votes text-center">${doc.data().votes}</p>
+            </div>
+            <div class="col-md-11 reddit-post">
+            <div class="card-header">
+                <h4>${doc.data().title}</h5>
+                </div>
                 <div class="card-body">
                     <p class="card-text">${doc.data().content}</p>
                 </div>
+            </div>
+            </div>
             </div>
             `);
         });
@@ -249,8 +261,8 @@ $(document).ready(function () {
         curSub = "";
         getPosts(db);
     })
-    $("#main-posts").on("click", ".card", function (event) {
-        console.log(this.id);
+    $("#main-posts").on("click", ".reddit-post", function (event) {
+        console.log($(this).closest('.card').attr('id'));
     });
 
     $("#main-subs").on("click", ".card", function (event) {
@@ -260,6 +272,19 @@ $(document).ready(function () {
 
     getPosts(db);
     
+    // Votes
+    $("#main-posts").on("click", ".upvote", function(event) {
+        var postId = $(this).closest('.card').attr('id');
+        /*const postRef = db.collectionGroup("posts").doc(postId);
+        postRef.get().then(function(post) {
+            console.log(post.data());
+        });*/
+    });
+
+    $("#main-posts").on("click", ".downvote", function(event) {
+        console.log("downvote ", $(this).closest('.card').attr('id'))
+    });
+
     // New Subreddits
     $("#make-sub").on("click", function() {
         const c = $("#new-sub-container");
