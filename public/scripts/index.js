@@ -182,7 +182,7 @@ function displayPosts(posts) {
     posts.get().then(function (querySnapshot) {
         $("#main-posts").empty();
         querySnapshot.forEach(function (doc) {
-            console.log(doc.id, ' => ', doc.data());
+            //console.log(doc.id, ' => ', doc.data());
             $('#main-posts').append(`
             <div id="${doc.id}" class="reddit-post card border-primary mt-2">
                 <div class="card-header"><h4>${doc.data().title}</h5></div>
@@ -200,6 +200,9 @@ function getPosts(db, id) {
         var docRef = db.collection("subreddits").doc(id);
         docRef.get().then(function (doc) {
             if (doc.exists) {
+                $("#new-post-container").addClass("hidden");
+                //$("#new-post-sub").children("option:selected").prop("selected", false);
+                $(`#new-post-sub option[value="${id}"]`).prop("selected", true);
                 var posts = docRef.collection("posts");
                 displayPosts(posts);
             } else {
@@ -218,8 +221,10 @@ function getPosts(db, id) {
 $(document).ready(function () {
     initAuth();
     const db = firebase.firestore();
+    let curSub = "";
 
     $("#home-button").on("click", function(event) {
+        curSub = "";
         getPosts(db);
     })
     $("#main-posts").on("click", ".card", function (event) {
@@ -227,15 +232,73 @@ $(document).ready(function () {
     });
 
     $("#main-subs").on("click", ".card", function (event) {
+        curSub = this.id;
         getPosts(db, this.id);
     });
 
     getPosts(db);
 
+    // New Posts
+    $("#make-post").on("click", function() {
+        const c = $("#new-post-container");
+        if (c.hasClass("hidden")) {
+            c.removeClass("hidden");
+        } else {
+            c.addClass("hidden");
+        }
+    });
+
+    $("#new-post-close").on("click", function() {
+        $("#new-post-container").addClass("hidden");
+    });
+
+    $("#new-post-form").on("submit", function (e) {
+        e.preventDefault();
+        const user = firebase.auth().currentUser;
+        if (!user) {
+            alert("You must log in to create a post.");
+            return;
+        }
+        $("#new-post-container").addClass("hidden");
+        const data = $("#new-post-form").serializeArray();
+        const title = data[0].value;
+        const content = data[1].value;
+        const subreddit = data[2].value;
+        const subRef = db.collection("subreddits").doc(subreddit);
+        subRef.get().then(function(doc) {
+            if (doc.exists) {
+                subRef.collection("posts").add({
+                    title: title,
+                    content: content,
+                    type: "text",
+                    votes: 1,
+                    user: db.doc(`/users/${user.uid}`)
+                }).then(function(postRef) {
+                    getPosts(db, curSub);
+                    db.collection("users").doc(user.uid).collection("userPosts").add({
+                        made: true,
+                        post: postRef,
+                        vote: 1
+                    });
+                });
+            } else {
+                alert("Subreddit does not exist.");
+            }
+        }).catch(function(error) {
+            console.log("Error getting document: ", error);
+        });
+        $("#new-post-form").find("input[type=text], textarea").val("");
+    });
+
+
+
     const subreddits = db.collection('subreddits');
     subreddits.get().then(function (querySnapshot) {
         querySnapshot.forEach(function (doc) {
-            console.log(doc.id, ' => ', doc.data());
+            //console.log(doc.id, ' => ', doc.data());
+            $('#new-post-sub').append(`
+            <option value="${doc.id}">${doc.data().name}</option>
+            `);
             $('#main-subs').append(`
             <div id="${doc.id}" class="reddit-sub card border-warning mt-2">
                 <div class="card-body">
