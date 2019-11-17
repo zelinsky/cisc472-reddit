@@ -203,6 +203,7 @@ function getPosts(db, id) {
                 $("#new-post-container").addClass("hidden");
                 //$("#new-post-sub").children("option:selected").prop("selected", false);
                 $(`#new-post-sub option[value="${id}"]`).prop("selected", true);
+                $("#current-sub").text(doc.data().name);
                 var posts = docRef.collection("posts");
                 displayPosts(posts);
             } else {
@@ -218,12 +219,33 @@ function getPosts(db, id) {
     }
 }
 
+function getSubs(db) {
+    $("#main-subs").empty();
+    const subreddits = db.collection('subreddits');
+    subreddits.get().then(function (querySnapshot) {
+        querySnapshot.forEach(function (doc) {
+            //console.log(doc.id, ' => ', doc.data());
+            $('#new-post-sub').append(`
+            <option value="${doc.id}">${doc.data().name}</option>
+            `);
+            $('#main-subs').append(`
+            <div id="${doc.id}" class="reddit-sub card border-warning mt-2">
+                <div class="card-body">
+                    <h5 class="card-title">${doc.data().name}</h5>
+                </div>
+            </div>
+            `);
+        });
+    });
+}
+
 $(document).ready(function () {
     initAuth();
     const db = firebase.firestore();
     let curSub = "";
 
     $("#home-button").on("click", function(event) {
+        $("#current-sub").text("");
         curSub = "";
         getPosts(db);
     })
@@ -237,11 +259,59 @@ $(document).ready(function () {
     });
 
     getPosts(db);
+    
+    // New Subreddits
+    $("#make-sub").on("click", function() {
+        const c = $("#new-sub-container");
+        if (c.hasClass("hidden")) {
+            $("#new-post-container").addClass("hidden");
+            c.removeClass("hidden");
+        } else {
+            c.addClass("hidden");
+        }
+    });
+
+    $("#new-sub-close").on("click", function() {
+        $("#new-sub-container").addClass("hidden");
+    });
+
+    $("#new-sub-form").on("submit", function (e) {
+        e.preventDefault();
+        const user = firebase.auth().currentUser;
+        if (!user) {
+            alert("You must log in to create a subreddit.");
+            return;
+        }
+        $("#new-sub-container").addClass("hidden");
+        const data = $("#new-sub-form").serializeArray();
+        const name = data[0].value;
+        const lowerName = name.toLowerCase();
+        const subRef = db.collection("subreddits").doc(lowerName);
+        subRef.get().then(function(doc) {
+            if (doc.exists) {
+                alert("Subreddit already exists");
+                return;
+            } else {
+                db.collection("subreddits").doc(lowerName).set({
+                    name: name
+                }).then(function() {
+                    curSub = lowerName;
+                    getSubs(db);
+                    getPosts(db, curSub)
+                }).catch(function(error) {
+                    console.log("Error creating subreddit: ", error)
+                });
+            }
+        });
+        $("#new-sub-form").find("input[type=text]").val("");
+    });
+
 
     // New Posts
     $("#make-post").on("click", function() {
         const c = $("#new-post-container");
         if (c.hasClass("hidden")) {
+            $("#new-sub-container").addClass("hidden");
             c.removeClass("hidden");
         } else {
             c.addClass("hidden");
@@ -290,23 +360,6 @@ $(document).ready(function () {
         $("#new-post-form").find("input[type=text], textarea").val("");
     });
 
-
-
-    const subreddits = db.collection('subreddits');
-    subreddits.get().then(function (querySnapshot) {
-        querySnapshot.forEach(function (doc) {
-            //console.log(doc.id, ' => ', doc.data());
-            $('#new-post-sub').append(`
-            <option value="${doc.id}">${doc.data().name}</option>
-            `);
-            $('#main-subs').append(`
-            <div id="${doc.id}" class="reddit-sub card border-warning mt-2">
-                <div class="card-body">
-                    <h5 class="card-title">${doc.data().name}</h5>
-                </div>
-            </div>
-            `);
-        });
-    });
+    getSubs(db);
 
 });

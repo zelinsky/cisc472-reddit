@@ -66,6 +66,15 @@ limitations under the License.
       <li class="nav-item">
         <a id="make-post" class="nav-link" href="#">Make a post</a>
       </li>
+      <li class="nav-item">
+        <a id="make-sub" class="nav-link" href="#">Make a subreddit</a>
+      </li>
+    </ul>
+
+    <ul id="navbar-center" class="navbar-nav mx-auto">
+      <li class="nav-item">
+        <a id="current-sub" class="nav-link" href="#"></a>
+      </li>
     </ul>
 
     <ul id="navbar-right" class="navbar-nav ml-auto">
@@ -82,9 +91,9 @@ limitations under the License.
 
 
   <div id="new-post-container" class="container hidden">
-      <button id="new-post-close" type="button" class="close" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
+    <button id="new-post-close" type="button" class="close" aria-label="Close">
+      <span aria-hidden="true">&times;</span>
+    </button>
     <form id="new-post-form" method="POST">
       <div class="form-group">
         <label for="new-post-title">Title</label>
@@ -98,6 +107,20 @@ limitations under the License.
         </select>
       </div>
       <button type="submit" class="btn btn-primary">Post</button>
+    </form>
+  </div>
+
+  <div id="new-sub-container" class="container hidden">
+    <button id="new-sub-close" type="button" class="close" aria-label="Close">
+      <span aria-hidden="true">&times;</span>
+    </button>
+    <form id="new-sub-form" method="POST">
+      <div class="form-group">
+        <label for="new-sub-name">Name</label>
+        <input type="text" id="new-sub-name" name="name" class="form-control" placeholder="Enter subreddit name"
+          required>
+      </div>
+      <button type="submit" class="btn btn-primary">Create</button>
     </form>
   </div>
 
