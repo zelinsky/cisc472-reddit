@@ -174,10 +174,6 @@ function initAuth() {
 
 }
 
-function upvotePost(db, id) {
-    console.log(id);
-}
-
 function displayPosts(posts) {
     posts.get().then(function (querySnapshot) {
         $("#main-posts").empty();
@@ -263,6 +259,11 @@ $(document).ready(function () {
     })
     $("#main-posts").on("click", ".reddit-post", function (event) {
         console.log($(this).closest('.card').attr('id'));
+        const postObj = $(this).closest('.card');
+        const postId = postObj.attr("id");
+        const subreddit = postObj.data("subreddit");
+    
+        const postRef = db.collection("subreddits").doc(subreddit).collection("posts").doc(postId);
     });
 
     $("#main-subs").on("click", ".card", function (event) {
