@@ -285,7 +285,11 @@ function fillPostPage(postRef, postData) {
     commentsRef.get().then(function(querySnapshot) {
         querySnapshot.forEach(function(comment) {
             comment.data().user.get().then(function (u) {
-                addComment(u.data().name, comment.data().text);
+                if (u.exists) {
+                    addComment(u.data().name, comment.data().text);
+                } else {
+                    addComment(u.uid, comment.data().text);
+                }
             });
         })
     });
