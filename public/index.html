@@ -132,17 +132,18 @@ limitations under the License.
       </div>
       <div class="col-md-8">
         <h1 id="posts-header">POSTS</h1>
+        
         <div id="current-post-container" class="container">
-          <div id="content_div" class="card">
-            <h2 id="title"></h2>
-            <h2>User: <span id="user_owner"></span></h2>
-            <h2>Content: <span id="content"></span></h2>
-            
+          
+          <div id="content_div" class="card border border-primary">
+            <h2 id="title" class="card-header"></h2>
+            <li class="list-group-item"><h2>User: <span id="user_owner"></span></h2></li>
+            <li class="list-group-item"><h2>Content: <span id="content"></span></h2></li>
           </div>
         
           <table id="vTable">
             <tr>
-              <th>votes: </th>
+              <th> Votes: </th>
               <th id="votes">0</th>
             </tr>
           </table>
@@ -153,13 +154,14 @@ limitations under the License.
             <button id="downvote_button" class="btn">Downdoot</button>
           </div>
         
-          <div id="comments_div" class="card">
-            <h2>Comments:</h2>
+          <div id="comments_div" class="card border border-warning">
+            <h2 class="card-header">Comments:</h2>
             <input id="comment_input" type="text" placeholder="Respond here">
             <ul id="comments" class="list-group list-group-flush">
             </ul>
           </div>
         </div>
+
         <div id="main-posts"></div>
       </div>
     </div>
