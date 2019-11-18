@@ -15,7 +15,40 @@ body {
     padding: 5px;
 }
  
-.material-icons.orange { color: #FB8C00; }
-.material-icons.blue { color: #4393fa; }
+.material-icons.orange {
+   color: #FB8C00;
+}
+.material-icons.blue { 
+  color: #4393fa;
+}
 
+#signIn {
+    float : right;
+  }
+  #header {
+    margin : auto;
+    text-align : center;
+  }
+  
+  #subReddits {
+    background : orange;
+    display : inline;
+  }
+  
+  table,td,th{
+    border: 1px solid black;
+  }
+  
+  #buttons{
+    margin-bottom : 25px;
+  }
+  
+  #vTable{
+    font-size: 20px;
+    margin-bottom: 10px;
+  }
+
+  #content_div{
+    margin-bottom: 10px;
+  }
 

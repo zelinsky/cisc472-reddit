@@ -131,7 +131,41 @@ limitations under the License.
         <div id="main-subs"></div>
       </div>
       <div class="col-md-8">
-        <h1>POSTS</h1>
+        <h1 id="posts-header">POSTS</h1>
+        
+        <div id="current-post-container" class="container hidden">
+          <button id="current-post-close" type="button" class="close" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+          <br>
+          <div id="content_div" class="card border border-primary">
+            <h2 id="title" class="card-header"></h2>
+            <li class="list-group-item"><h2>User: <span id="user_owner"></span></h2></li>
+            <li class="list-group-item"><h2>Content: <span id="content"></span></h2></li>
+          </div>
+        
+          <table id="vTable">
+            <tr>
+              <th> Votes: </th>
+              <th id="votes">0</th>
+            </tr>
+          </table>
+        
+          <!-- upvote and down vote buttons-->
+          <div id="buttons">
+            <button id="upvote_button" class="btn">Updoot</button>
+            <button id="downvote_button" class="btn">Downdoot</button>
+          </div>
+        
+          <div id="comments_div" class="card border border-warning">
+            <h2 class="card-header">Comments:</h2>
+            <input id="comment_input" type="text" placeholder="Respond here">
+            <button id="submit-comment" type="button" class="btn btn-primary">Post</button>
+            <ul id="comments" class="list-group list-group-flush">
+            </ul>
+          </div>
+        </div>
+
         <div id="main-posts"></div>
       </div>
     </div>
