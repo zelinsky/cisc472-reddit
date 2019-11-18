@@ -138,7 +138,6 @@ function initAuth() {
             var uid = user.uid;
             //console.log(uid);
             //firebase.auth().currentUser.getIdToken(true).then((idToken) => console.log(idToken));
-            firebase.firestore().collection("users").doc(uid).get().then((doc) => console.log(doc.data()));
             var providerData = user.providerData;
             // [START_EXCLUDE]
             $('#navbar-user').text(`Logged in as: ${displayName}`).show();
@@ -195,6 +194,9 @@ function displayPosts(posts) {
                 <div class="card-body">
                     <p class="card-text">${doc.data().content}</p>
                 </div>
+                <div class="card-footer text-muted">
+                    ${doc.ref.parent.parent.id}
+                </div>
             </div>
             </div>
             </div>
@@ -247,63 +249,15 @@ function getSubs(db) {
     });
 }
 
-function vote(newVote, postRef, user, postKey) {
 
-    // check if user has 1.Is logged in and 2.Has not voted already
-    var voteUpdate = 0; // stores value we have to add to post votes,  changes based on new vote
-    var currentUserPost = currentUser.collection("userPosts").doc(postKey);// if user has intacted with this post before this gets that doc
-
-    // checks if doc exists
-    currentUserPost.get().then(function (doc) {
-        if (doc.exists) {
-            var oldVote = doc.data().vote;
-            console.log("OLD VOTE: ", oldVote);
-
-            // user has interacted with this post before! They either made it or voted on it
-            console.log("Previous user vote:", oldVote);
-
-            // only update votes in post if direction doesnt match current vote
-            if (newVote != oldVote) {
-                voteUpdate = newVote - oldVote; // ensures the post is updated with the correct vote count
-                //console.log("vote update: ", voteUpdate);
-                currentUserPost.update({ vote: newVote }); // updates user vote
-            }
-        } else {
-            // make new post instance and vote
-            voteUpdate = newVote;
-
-            currentUserPost.set({
-                make: false,
-                vote: voteUpdate,
-                post: postInst.path
-            });
-        }
-
-        // update server
-        postInst.get().then(function (doc) {
-            postInst.update({ votes: doc.data().votes + voteUpdate }); // update vote in server
-        }).catch(function (error) {
-            console.log("Error getting document:", error);
-        });
-    }).catch(function (error) {
-        console.log("Error getting document:", error);
-    });
-
-    // color buttons accordingly 
-    if (newVote == 1) {
-        $("#upvote_button").attr("class", "btn btn-success");
-        $("#downvote_button").attr("class", "btn btn-danger");
-    }
-    else {
-        $("#upvote_button").attr("class", "btn btn-danger");
-        $("#downvote_button").attr("class", "btn btn-success");
-    }
-}
-
-function fillPostPage(postData) {
+function fillPostPage(postRef, postData) {
     // want to show: title,content,type,user_owner,subreddit
 
-
+    $("#title").empty();
+    $("#user_owner").empty();
+    $("#votes").empty();
+    $("#content").empty();
+    $("#comments").empty();
     // decide how to handle content based on its type
     switch (postData.type) {
         case "text":
@@ -326,45 +280,60 @@ function fillPostPage(postData) {
 
     $("#title").text(postData.title);
     $("#votes").text(postData.votes);
+
+    const commentsRef = postRef.collection("comments");
+    commentsRef.get().then(function(querySnapshot) {
+        querySnapshot.forEach(function(comment) {
+            comment.data().user.get().then(function (u) {
+                addComment(u.data().name, comment.data().text);
+            });
+        })
+    });
 }
 
-function sendComment(user, text, post) {
+function sendComment(db, user, text, postObj) {
     // user should be reference path
     // post should be db object
     //console.log(post.collection("comments").doc().getId());
 
+    if (text && !user) {
+        alert("You must be logged in to post a comment!");
+        return
+    } else if (text) {
     // send to post collection
-    post.collection("comments").add({
-        user: user,
-        text: text
-    })
-        .then(function (doc) {
+
+    const postId = postObj.attr("id");
+    const subreddit = postObj.data("subreddit");
+    const postRef = db.collection("subreddits").doc(subreddit).collection("posts").doc(postId);
+    const userRef = db.collection("users").doc(user.uid);
+    userRef.get().then(function (u) {
+        addComment(u.data().name, text);
+    });
+
+    postRef.collection("comments").add({
+        user: db.doc(`/users/${user.uid}`),
+        text: text,
+        votes: 1
+    }).then(function (doc) {
             // send to user collection
-            user.collection("userComments").add({
+            db.collection("users").doc(user.uid).collection("userComments").add({
                 commentPath: doc,
                 made: true,
-                vote: 0
+                vote: 1
             });
         });
+    }
 }
 
-function addComment(user, newComment) {
+function addComment(username, newComment) {
     //$("#comments").text(newComment);
     //$("#comments").text($("#comments").text().concat("\n", user,": ",newComment,"\n"));
 
-    var userTitle = $("<b></b>").text(user.concat(": "));
-    var commment = $("<p></p>").text(newComment);
-    var message = $("<li class='list-group-item'></li>").append($("<b></b>").text(user), $("<p></p>").text(newComment));
+    //var userTitle = $("<b></b>").text(user.concat(": "));
+    //var commment = $("<p></p>").text(newComment);
+    var message = $("<li class='list-group-item'></li>").append($("<b></b>").text(username), $("<p></p>").text(newComment));
 
     $("#comments").prepend(message);
-}
-
-function getUsername(ref) {
-    // gets the username from the reference path (returns a string)
-    var tmp = ref.data().user.path.split("/");
-    var username = tmp[tmp.length - 1];
-    console.log(username);
-    return username;
 }
 
 function upvote(db, user, postObj) {
@@ -527,7 +496,7 @@ $(document).ready(function () {
         postRef.get().then(function (doc) {
             if (doc.exists) {
                 var data = doc.data();
-                fillPostPage(data);
+                fillPostPage(postRef, data);
             } else {
                 console.log("No such document!");
             }
@@ -567,16 +536,16 @@ $(document).ready(function () {
                 var newComment = $("#comment_input").val();
                 $("#comment_input").val(null);
 
-                sendComment(user, newComment, postRef);
+                sendComment(db, user, newComment, postObj);
             }
         })
 
         //listen for comments from server
-        postRef.collection("comments").onSnapshot(function (snapshot) {
+        /*postRef.collection("comments").onSnapshot(function (snapshot) {
             snapshot.docChanges().forEach(function (change) {
                 addComment(getUsername(change.doc), change.doc.data().text);
             });
-        });
+        });*/
 
         $("#main-posts").addClass("hidden");
         $("#posts-header").addClass("hidden");
