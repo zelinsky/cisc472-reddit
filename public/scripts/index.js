@@ -509,6 +509,9 @@ $(document).ready(function () {
     let curSub = "";
 
     $("#home-button").on("click", function (event) {
+        $("#main-posts").removeClass("hidden");
+        $("#posts-header").removeClass("hidden");
+        $("#current-post-container").addClass("hidden");
         $("#current-sub").text("");
         curSub = "";
         getPosts(db);
@@ -575,9 +578,21 @@ $(document).ready(function () {
             });
         });
 
+        $("#main-posts").addClass("hidden");
+        $("#posts-header").addClass("hidden");
+        $("#current-post-container").removeClass("hidden");
     });
 
+    $("#current-post-close").on("click", function () {
+        $("#main-posts").removeClass("hidden");
+        $("#posts-header").removeClass("hidden");
+        $("#current-post-container").addClass("hidden");
+    })
+
     $("#main-subs").on("click", ".card", function (event) {
+        $("#main-posts").removeClass("hidden");
+        $("#posts-header").removeClass("hidden");
+        $("#current-post-container").addClass("hidden");
         curSub = this.id;
         getPosts(db, this.id);
     });
