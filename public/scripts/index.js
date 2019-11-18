@@ -247,23 +247,334 @@ function getSubs(db) {
     });
 }
 
+function vote(newVote, postRef, user, postKey) {
+
+    // check if user has 1.Is logged in and 2.Has not voted already
+    var voteUpdate = 0; // stores value we have to add to post votes,  changes based on new vote
+    var currentUserPost = currentUser.collection("userPosts").doc(postKey);// if user has intacted with this post before this gets that doc
+
+    // checks if doc exists
+    currentUserPost.get().then(function (doc) {
+        if (doc.exists) {
+            var oldVote = doc.data().vote;
+            console.log("OLD VOTE: ", oldVote);
+
+            // user has interacted with this post before! They either made it or voted on it
+            console.log("Previous user vote:", oldVote);
+
+            // only update votes in post if direction doesnt match current vote
+            if (newVote != oldVote) {
+                voteUpdate = newVote - oldVote; // ensures the post is updated with the correct vote count
+                //console.log("vote update: ", voteUpdate);
+                currentUserPost.update({ vote: newVote }); // updates user vote
+            }
+        } else {
+            // make new post instance and vote
+            voteUpdate = newVote;
+
+            currentUserPost.set({
+                make: false,
+                vote: voteUpdate,
+                post: postInst.path
+            });
+        }
+
+        // update server
+        postInst.get().then(function (doc) {
+            postInst.update({ votes: doc.data().votes + voteUpdate }); // update vote in server
+        }).catch(function (error) {
+            console.log("Error getting document:", error);
+        });
+    }).catch(function (error) {
+        console.log("Error getting document:", error);
+    });
+
+    // color buttons accordingly 
+    if (newVote == 1) {
+        $("#upvote_button").attr("class", "btn btn-success");
+        $("#downvote_button").attr("class", "btn btn-danger");
+    }
+    else {
+        $("#upvote_button").attr("class", "btn btn-danger");
+        $("#downvote_button").attr("class", "btn btn-success");
+    }
+}
+
+function fillPostPage(postData) {
+    // want to show: title,content,type,user_owner,subreddit
+
+
+    // decide how to handle content based on its type
+    switch (postData.type) {
+        case "text":
+            // handles text content
+            $("#content").text(postData.content);
+            break;
+        case "link":
+            //handles links
+            break;
+    }
+
+    // fill in metadata
+    // parse path to get username
+    const userRef = postData.user;
+    userRef.get().then(function (user) {
+        if (user.exists) {
+            $("#user_owner").text(user.data().name);
+        }
+    });
+
+    $("#title").text(postData.title);
+    $("#votes").text(postData.votes);
+}
+
+function sendComment(user, text, post) {
+    // user should be reference path
+    // post should be db object
+    //console.log(post.collection("comments").doc().getId());
+
+    // send to post collection
+    post.collection("comments").add({
+        user: user,
+        text: text
+    })
+        .then(function (doc) {
+            // send to user collection
+            user.collection("userComments").add({
+                commentPath: doc,
+                made: true,
+                vote: 0
+            });
+        });
+}
+
+function addComment(user, newComment) {
+    //$("#comments").text(newComment);
+    //$("#comments").text($("#comments").text().concat("\n", user,": ",newComment,"\n"));
+
+    var userTitle = $("<b></b>").text(user.concat(": "));
+    var commment = $("<p></p>").text(newComment);
+    var message = $("<li class='list-group-item'></li>").append($("<b></b>").text(user), $("<p></p>").text(newComment));
+
+    $("#comments").prepend(message);
+}
+
+function getUsername(ref) {
+    // gets the username from the reference path (returns a string)
+    var tmp = ref.data().user.path.split("/");
+    var username = tmp[tmp.length - 1];
+    console.log(username);
+    return username;
+}
+
+function upvote(db, user, postObj) {
+    if (!user) {
+        alert("You must be logged in to vote!")
+        return;
+    }
+
+    const postId = postObj.attr("id");
+    const subreddit = postObj.data("subreddit");
+
+    const postRef = db.collection("subreddits").doc(subreddit).collection("posts").doc(postId);
+    const userPostRef = db.collection("users").doc(user.uid).collection("userPosts").where("post", "==", postRef);
+    userPostRef.get().then(function (querySnapshot) {
+        const voteObj = postObj.find(".votes");
+        if (querySnapshot.empty) {
+            const numVotes = parseInt(voteObj.text()) + 1;
+            voteObj.text(numVotes);
+
+            db.collection("users").doc(user.uid).collection("userPosts").add({
+                made: false,
+                post: postRef,
+                vote: 1
+            }).then(function (voteRef) {
+                postRef.update({
+                    votes: firebase.firestore.FieldValue.increment(1)
+                });
+            });
+            $("#votes").text(numVotes);
+        } else {
+            querySnapshot.forEach(function (userPost) {
+                if (userPost.data().vote == -1) {
+                    const numVotes = parseInt(voteObj.text()) + 2;
+                    voteObj.text(numVotes);
+                    userPost.ref.update({
+                        vote: firebase.firestore.FieldValue.increment(2)
+                    }).then(function (voteRef) {
+                        postRef.update({
+                            votes: firebase.firestore.FieldValue.increment(2)
+                        });
+                    });
+                    $("#votes").text(numVotes);
+                } else if (userPost.data().vote == 0) {
+                    const numVotes = parseInt(voteObj.text()) + 1;
+                    voteObj.text(numVotes);
+                    userPost.ref.update({
+                        vote: firebase.firestore.FieldValue.increment(1)
+                    }).then(function (voteRef) {
+                        postRef.update({
+                            votes: firebase.firestore.FieldValue.increment(1)
+                        });
+                    });
+                    $("#votes").text(numVotes);
+                } else if (userPost.data().vote == 1) {
+                    const numVotes = parseInt(voteObj.text()) - 1;
+                    voteObj.text(numVotes);
+                    userPost.ref.update({
+                        vote: firebase.firestore.FieldValue.increment(-1)
+                    }).then(function (voteRef) {
+                        postRef.update({
+                            votes: firebase.firestore.FieldValue.increment(-1)
+                        });
+                    });
+                    $("#votes").text(numVotes);
+                }
+            });
+        }
+    });
+}
+
+function downvote(db, user, postObj) {
+    if (!user) {
+        alert("You must be logged in to vote!")
+        return;
+    }
+
+    const postId = postObj.attr("id");
+    const subreddit = postObj.data("subreddit");
+
+    const postRef = db.collection("subreddits").doc(subreddit).collection("posts").doc(postId);
+    const userPostRef = db.collection("users").doc(user.uid).collection("userPosts").where("post", "==", postRef);
+    userPostRef.get().then(function (querySnapshot) {
+        const voteObj = postObj.find(".votes");
+        if (querySnapshot.empty) {
+            const numVotes = parseInt(voteObj.text()) - 1;
+            voteObj.text(numVotes);
+
+            db.collection("users").doc(user.uid).collection("userPosts").add({
+                made: false,
+                post: postRef,
+                vote: -1
+            }).then(function (voteRef) {
+                postRef.update({
+                    votes: firebase.firestore.FieldValue.increment(-1)
+                });
+            });
+            $("#votes").text(numVotes);
+        } else {
+            querySnapshot.forEach(function (userPost) {
+                if (userPost.data().vote == -1) {
+                    const numVotes = parseInt(voteObj.text()) + 1;
+                    voteObj.text(numVotes);
+                    userPost.ref.update({
+                        vote: firebase.firestore.FieldValue.increment(1)
+                    }).then(function (voteRef) {
+                        postRef.update({
+                            votes: firebase.firestore.FieldValue.increment(1)
+                        });
+                    });
+                    $("#votes").text(numVotes);
+                } else if (userPost.data().vote == 0) {
+                    const numVotes = parseInt(voteObj.text()) - 1;
+                    voteObj.text(numVotes);
+                    userPost.ref.update({
+                        vote: firebase.firestore.FieldValue.increment(-1)
+                    }).then(function (voteRef) {
+                        postRef.update({
+                            votes: firebase.firestore.FieldValue.increment(-1)
+                        });
+                    });
+                    $("#votes").text(numVotes);
+                } else if (userPost.data().vote == 1) {
+                    const numVotes = parseInt(voteObj.text()) - 2;
+                    voteObj.text(numVotes);
+                    userPost.ref.update({
+                        vote: firebase.firestore.FieldValue.increment(-2)
+                    }).then(function (voteRef) {
+                        postRef.update({
+                            votes: firebase.firestore.FieldValue.increment(-2)
+                        });
+                    });
+                    $("#votes").text(numVotes);
+                }
+            });
+        }
+    });
+}
+
 $(document).ready(function () {
     initAuth();
     const db = firebase.firestore();
     let curSub = "";
 
-    $("#home-button").on("click", function(event) {
+    $("#home-button").on("click", function (event) {
         $("#current-sub").text("");
         curSub = "";
         getPosts(db);
-    })
+    });
+
     $("#main-posts").on("click", ".reddit-post", function (event) {
-        console.log($(this).closest('.card').attr('id'));
         const postObj = $(this).closest('.card');
         const postId = postObj.attr("id");
         const subreddit = postObj.data("subreddit");
-    
+
         const postRef = db.collection("subreddits").doc(subreddit).collection("posts").doc(postId);
+        const user = firebase.auth().currentUser;
+        postRef.get().then(function (doc) {
+            if (doc.exists) {
+                var data = doc.data();
+                fillPostPage(data);
+            } else {
+                console.log("No such document!");
+            }
+        }).catch(function (error) {
+            console.log("Error getting document:", error);
+        });
+
+        // color buttons based on user's previous vote
+        if (user) {
+            db.collection("users").doc(user.uid).collection("userPosts").where("post", "==", postRef).get().then(function (querySnapshot) {
+                querySnapshot.forEach(function (doc) {
+                    var previousVote = doc.data().vote;
+                    if (previousVote == 1) {
+                        $("#upvote_button").attr("class", "btn btn-success");
+                        $("#downvote_button").attr("class", "btn btn-danger");
+                    }
+                    else if (previousVote == -1) {
+                        $("#upvote_button").attr("class", "btn btn-danger");
+                        $("#downvote_button").attr("class", "btn btn-success");
+                    }
+                });
+            });
+        }
+
+        //listen to votes from client 
+        $("#upvote_button").click(function () { 
+            upvote(db, user, postObj);
+         });
+        $("#downvote_button").click(function () { 
+            downvote(db, user, postObj);
+        });
+
+        //listen for comments from client
+        $("#comment_input").keypress(function (event) {
+            var keycode = (event.keycode ? event.keycode : event.which);
+            if (keycode == '13') {
+                var newComment = $("#comment_input").val();
+                $("#comment_input").val(null);
+
+                sendComment(user, newComment, postRef);
+            }
+        })
+
+        //listen for comments from server
+        postRef.collection("comments").onSnapshot(function (snapshot) {
+            snapshot.docChanges().forEach(function (change) {
+                addComment(getUsername(change.doc), change.doc.data().text);
+            });
+        });
+
     });
 
     $("#main-subs").on("click", ".card", function (event) {
@@ -272,143 +583,18 @@ $(document).ready(function () {
     });
 
     getPosts(db);
-    
+
     // Votes
-    $("#main-posts").on("click", ".upvote", function(event) {
-        const user = firebase.auth().currentUser;
-        if (!user) {
-            alert("You must be logged in to vote!")
-            return;
-        }
-
-        const postObj = $(this).closest('.card');
-        const postId = postObj.attr("id");
-        const subreddit = postObj.data("subreddit");
-    
-        const postRef = db.collection("subreddits").doc(subreddit).collection("posts").doc(postId);
-        const userPostRef = db.collection("users").doc(user.uid).collection("userPosts").where("post", "==", postRef);
-        userPostRef.get().then(function(querySnapshot) {
-            const voteObj = postObj.find(".votes");
-            if (querySnapshot.empty) {
-                const numVotes = parseInt(voteObj.text()) + 1;
-                voteObj.text(numVotes);
-
-                db.collection("users").doc(user.uid).collection("userPosts").add({
-                    made: false,
-                    post: postRef,
-                    vote: 1
-                }).then(function(voteRef) {
-                    postRef.update({
-                        votes: firebase.firestore.FieldValue.increment(1)
-                    });
-                });
-            } else {
-                querySnapshot.forEach(function(userPost){
-                    if (userPost.data().vote == -1) {
-                        const numVotes = parseInt(voteObj.text()) + 2;
-                        voteObj.text(numVotes); 
-                        userPost.ref.update({
-                            vote: firebase.firestore.FieldValue.increment(2)
-                        }).then(function(voteRef) {
-                            postRef.update({
-                                votes: firebase.firestore.FieldValue.increment(2)
-                            });
-                        });
-                    } else if (userPost.data().vote == 0 ) {
-                        const numVotes = parseInt(voteObj.text()) + 1;
-                        voteObj.text(numVotes); 
-                        userPost.ref.update({
-                            vote: firebase.firestore.FieldValue.increment(1)
-                        }).then(function(voteRef) {
-                            postRef.update({
-                                votes: firebase.firestore.FieldValue.increment(1)
-                            });
-                        });
-                    } else if (userPost.data().vote == 1) {
-                        const numVotes = parseInt(voteObj.text()) - 1;
-                        voteObj.text(numVotes); 
-                        userPost.ref.update({
-                            vote: firebase.firestore.FieldValue.increment(-1)
-                        }).then(function(voteRef) {
-                            postRef.update({
-                                votes: firebase.firestore.FieldValue.increment(-1)
-                            });
-                        });
-                    }
-                });
-            }
-
-        })
+    $("#main-posts").on("click", ".upvote", function (event) {
+        upvote(db, firebase.auth().currentUser, $(this).closest('.card'));
     });
 
-    $("#main-posts").on("click", ".downvote", function(event) {
-        const user = firebase.auth().currentUser;
-        if (!user) {
-            alert("You must be logged in to vote!")
-            return;
-        }
-
-        const postObj = $(this).closest('.card');
-        const postId = postObj.attr("id");
-        const subreddit = postObj.data("subreddit");
-    
-        const postRef = db.collection("subreddits").doc(subreddit).collection("posts").doc(postId);
-        const userPostRef = db.collection("users").doc(user.uid).collection("userPosts").where("post", "==", postRef);
-        userPostRef.get().then(function(querySnapshot) {
-            const voteObj = postObj.find(".votes");
-            if (querySnapshot.empty) {
-                const numVotes = parseInt(voteObj.text()) - 1;
-                voteObj.text(numVotes);
-
-                db.collection("users").doc(user.uid).collection("userPosts").add({
-                    made: false,
-                    post: postRef,
-                    vote: -1
-                }).then(function(voteRef) {
-                    postRef.update({
-                        votes: firebase.firestore.FieldValue.increment(-1)
-                    });
-                });
-            } else {
-                querySnapshot.forEach(function(userPost){
-                    if (userPost.data().vote == -1) {
-                        const numVotes = parseInt(voteObj.text()) + 1;
-                        voteObj.text(numVotes); 
-                        userPost.ref.update({
-                            vote: firebase.firestore.FieldValue.increment(1)
-                        }).then(function(voteRef) {
-                            postRef.update({
-                                votes: firebase.firestore.FieldValue.increment(1)
-                            });
-                        });
-                    } else if (userPost.data().vote == 0 ) {
-                        const numVotes = parseInt(voteObj.text()) - 1;
-                        voteObj.text(numVotes); 
-                        userPost.ref.update({
-                            vote: firebase.firestore.FieldValue.increment(-1)
-                        }).then(function(voteRef) {
-                            postRef.update({
-                                votes: firebase.firestore.FieldValue.increment(-1)
-                            });
-                        });
-                    } else if (userPost.data().vote == 1) {
-                        const numVotes = parseInt(voteObj.text()) - 2;
-                        voteObj.text(numVotes); 
-                        userPost.ref.update({
-                            vote: firebase.firestore.FieldValue.increment(-2)
-                        }).then(function(voteRef) {
-                            postRef.update({
-                                votes: firebase.firestore.FieldValue.increment(-2)
-                            });
-                        });
-                    }
-                });
-            }
-
-        })
+    $("#main-posts").on("click", ".downvote", function (event) {
+        downvote(db, firebase.auth().currentUser, $(this).closest('.card'));
     });
+
     // New Subreddits
-    $("#make-sub").on("click", function() {
+    $("#make-sub").on("click", function () {
         const c = $("#new-sub-container");
         if (c.hasClass("hidden")) {
             $("#new-post-container").addClass("hidden");
@@ -418,7 +604,7 @@ $(document).ready(function () {
         }
     });
 
-    $("#new-sub-close").on("click", function() {
+    $("#new-sub-close").on("click", function () {
         $("#new-sub-container").addClass("hidden");
     });
 
@@ -434,18 +620,18 @@ $(document).ready(function () {
         const name = data[0].value;
         const lowerName = name.toLowerCase();
         const subRef = db.collection("subreddits").doc(lowerName);
-        subRef.get().then(function(doc) {
+        subRef.get().then(function (doc) {
             if (doc.exists) {
                 alert("Subreddit already exists");
                 return;
             } else {
                 db.collection("subreddits").doc(lowerName).set({
                     name: name
-                }).then(function() {
+                }).then(function () {
                     curSub = lowerName;
                     getSubs(db);
                     getPosts(db, curSub)
-                }).catch(function(error) {
+                }).catch(function (error) {
                     console.log("Error creating subreddit: ", error)
                 });
             }
@@ -455,7 +641,7 @@ $(document).ready(function () {
 
 
     // New Posts
-    $("#make-post").on("click", function() {
+    $("#make-post").on("click", function () {
         const c = $("#new-post-container");
         if (c.hasClass("hidden")) {
             $("#new-sub-container").addClass("hidden");
@@ -465,7 +651,7 @@ $(document).ready(function () {
         }
     });
 
-    $("#new-post-close").on("click", function() {
+    $("#new-post-close").on("click", function () {
         $("#new-post-container").addClass("hidden");
     });
 
@@ -482,7 +668,7 @@ $(document).ready(function () {
         const content = data[1].value;
         const subreddit = data[2].value;
         const subRef = db.collection("subreddits").doc(subreddit);
-        subRef.get().then(function(doc) {
+        subRef.get().then(function (doc) {
             if (doc.exists) {
                 subRef.collection("posts").add({
                     title: title,
@@ -490,7 +676,7 @@ $(document).ready(function () {
                     type: "text",
                     votes: 1,
                     user: db.doc(`/users/${user.uid}`)
-                }).then(function(postRef) {
+                }).then(function (postRef) {
                     getPosts(db, curSub);
                     db.collection("users").doc(user.uid).collection("userPosts").add({
                         made: true,
@@ -501,7 +687,7 @@ $(document).ready(function () {
             } else {
                 alert("Subreddit does not exist.");
             }
-        }).catch(function(error) {
+        }).catch(function (error) {
             console.log("Error getting document: ", error);
         });
         $("#new-post-form").find("input[type=text], textarea").val("");
