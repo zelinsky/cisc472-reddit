@@ -15,8 +15,12 @@ body {
     padding: 5px;
 }
  
-.material-icons.orange { color: #FB8C00; }
-.material-icons.blue { color: #4393fa; }
+.material-icons.orange {
+   color: #FB8C00;
+}
+.material-icons.blue { 
+  color: #4393fa;
+}
 
 #signIn {
     float : right;
@@ -44,4 +48,7 @@ body {
     margin-bottom: 10px;
   }
 
+  #content_div{
+    margin-bottom: 10px;
+  }
 
