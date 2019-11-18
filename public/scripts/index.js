@@ -184,7 +184,7 @@ function displayPosts(posts) {
         querySnapshot.forEach(function (doc) {
             //console.log(doc.id, ' => ', doc.data());
             $('#main-posts').append(`
-            <div id="${doc.id}" class="card border-primary mt-2">
+            <div id="${doc.id}" data-subreddit="${doc.ref.parent.parent.id}" class="card border-primary mt-2">
             <div class="row">
             <div class="col-md-1">
             <i class="upvote material-icons md-48">keyboard_arrow_up</i>
@@ -274,17 +274,138 @@ $(document).ready(function () {
     
     // Votes
     $("#main-posts").on("click", ".upvote", function(event) {
-        var postId = $(this).closest('.card').attr('id');
-        /*const postRef = db.collectionGroup("posts").doc(postId);
-        postRef.get().then(function(post) {
-            console.log(post.data());
-        });*/
+        const user = firebase.auth().currentUser;
+        if (!user) {
+            alert("You must be logged in to vote!")
+            return;
+        }
+
+        const postObj = $(this).closest('.card');
+        const postId = postObj.attr("id");
+        const subreddit = postObj.data("subreddit");
+    
+        const postRef = db.collection("subreddits").doc(subreddit).collection("posts").doc(postId);
+        const userPostRef = db.collection("users").doc(user.uid).collection("userPosts").where("post", "==", postRef);
+        userPostRef.get().then(function(querySnapshot) {
+            const voteObj = postObj.find(".votes");
+            if (querySnapshot.empty) {
+                const numVotes = parseInt(voteObj.text()) + 1;
+                voteObj.text(numVotes);
+
+                db.collection("users").doc(user.uid).collection("userPosts").add({
+                    made: false,
+                    post: postRef,
+                    vote: 1
+                }).then(function(voteRef) {
+                    postRef.update({
+                        votes: firebase.firestore.FieldValue.increment(1)
+                    });
+                });
+            } else {
+                querySnapshot.forEach(function(userPost){
+                    if (userPost.data().vote == -1) {
+                        const numVotes = parseInt(voteObj.text()) + 2;
+                        voteObj.text(numVotes); 
+                        userPost.ref.update({
+                            vote: firebase.firestore.FieldValue.increment(2)
+                        }).then(function(voteRef) {
+                            postRef.update({
+                                votes: firebase.firestore.FieldValue.increment(2)
+                            });
+                        });
+                    } else if (userPost.data().vote == 0 ) {
+                        const numVotes = parseInt(voteObj.text()) + 1;
+                        voteObj.text(numVotes); 
+                        userPost.ref.update({
+                            vote: firebase.firestore.FieldValue.increment(1)
+                        }).then(function(voteRef) {
+                            postRef.update({
+                                votes: firebase.firestore.FieldValue.increment(1)
+                            });
+                        });
+                    } else if (userPost.data().vote == 1) {
+                        const numVotes = parseInt(voteObj.text()) - 1;
+                        voteObj.text(numVotes); 
+                        userPost.ref.update({
+                            vote: firebase.firestore.FieldValue.increment(-1)
+                        }).then(function(voteRef) {
+                            postRef.update({
+                                votes: firebase.firestore.FieldValue.increment(-1)
+                            });
+                        });
+                    }
+                });
+            }
+
+        })
     });
 
     $("#main-posts").on("click", ".downvote", function(event) {
-        console.log("downvote ", $(this).closest('.card').attr('id'))
-    });
+        const user = firebase.auth().currentUser;
+        if (!user) {
+            alert("You must be logged in to vote!")
+            return;
+        }
 
+        const postObj = $(this).closest('.card');
+        const postId = postObj.attr("id");
+        const subreddit = postObj.data("subreddit");
+    
+        const postRef = db.collection("subreddits").doc(subreddit).collection("posts").doc(postId);
+        const userPostRef = db.collection("users").doc(user.uid).collection("userPosts").where("post", "==", postRef);
+        userPostRef.get().then(function(querySnapshot) {
+            const voteObj = postObj.find(".votes");
+            if (querySnapshot.empty) {
+                const numVotes = parseInt(voteObj.text()) - 1;
+                voteObj.text(numVotes);
+
+                db.collection("users").doc(user.uid).collection("userPosts").add({
+                    made: false,
+                    post: postRef,
+                    vote: -1
+                }).then(function(voteRef) {
+                    postRef.update({
+                        votes: firebase.firestore.FieldValue.increment(-1)
+                    });
+                });
+            } else {
+                querySnapshot.forEach(function(userPost){
+                    if (userPost.data().vote == -1) {
+                        const numVotes = parseInt(voteObj.text()) + 1;
+                        voteObj.text(numVotes); 
+                        userPost.ref.update({
+                            vote: firebase.firestore.FieldValue.increment(1)
+                        }).then(function(voteRef) {
+                            postRef.update({
+                                votes: firebase.firestore.FieldValue.increment(1)
+                            });
+                        });
+                    } else if (userPost.data().vote == 0 ) {
+                        const numVotes = parseInt(voteObj.text()) - 1;
+                        voteObj.text(numVotes); 
+                        userPost.ref.update({
+                            vote: firebase.firestore.FieldValue.increment(-1)
+                        }).then(function(voteRef) {
+                            postRef.update({
+                                votes: firebase.firestore.FieldValue.increment(-1)
+                            });
+                        });
+                    } else if (userPost.data().vote == 1) {
+                        const numVotes = parseInt(voteObj.text()) - 2;
+                        voteObj.text(numVotes); 
+                        userPost.ref.update({
+                            vote: firebase.firestore.FieldValue.increment(-2)
+                        }).then(function(voteRef) {
+                            postRef.update({
+                                votes: firebase.firestore.FieldValue.increment(-2)
+                            });
+                        });
+                    }
+                });
+            }
+
+        })
+    });
     // New Subreddits
     $("#make-sub").on("click", function() {
         const c = $("#new-sub-container");
