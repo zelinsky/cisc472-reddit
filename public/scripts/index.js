@@ -530,6 +530,12 @@ $(document).ready(function () {
         });
 
         //listen for comments from client
+        $("#submit-comment").on("click", function (event) {
+            var newComment = $("#comment_input").val();
+                $("#comment_input").val(null);
+
+                sendComment(db, user, newComment, postObj);
+        });
         $("#comment_input").keypress(function (event) {
             var keycode = (event.keycode ? event.keycode : event.which);
             if (keycode == '13') {
